@@ -1,0 +1,12 @@
+{
+  "name": "naniwomite_yoshi_to_ittanndesuka",
+  "version": "1.0.0",
+  "description": "- 村人には同じ「正規品チェックリスト」が配布される\r - 人狼相当（偽者）には異なるチェックリストが配布される\r - 各ラウンドで「正規品」を過半数納品できれば村人勝利\r - 人狼相当を見つけて追放できれば村人勝利\r - 正規品を納品できない、または人狼相当と村人が同数になったら人狼相当勝利",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
