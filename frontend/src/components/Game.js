@@ -192,13 +192,27 @@ const Game = ({ user, roomId, onGameEnd }) => {
 
       <div className="game-content">
         <div className="product-section">
-          <h3>検査対象商品</h3>
+          <div className="inspection-notice">
+            🚨 <strong>緊急品質検査</strong> 🚨
+          </div>
           <div className="product-card">
-            <h4>{currentProduct.name}</h4>
-            <p>{currentProduct.description}</p>
+            <div className="product-header">
+              <h4>{currentProduct.name}</h4>
+              <span className="inspection-badge">要検査</span>
+            </div>
+            <div className="product-description">
+              <strong>用途:</strong> {currentProduct.description}
+            </div>
+            {currentProduct.hint && (
+              <div className="product-hint">
+                💡 <em>{currentProduct.hint}</em>
+              </div>
+            )}
             <div className="product-properties">
+              <h5>📋 商品仕様書</h5>
               {currentProduct.properties.map((prop, index) => (
                 <div key={index} className="property-item">
+                  <span className="property-icon">▶</span>
                   {prop}
                 </div>
               ))}
@@ -207,7 +221,12 @@ const Game = ({ user, roomId, onGameEnd }) => {
         </div>
 
         <div className="checklist-section">
-          <h3>あなたのチェックリスト</h3>
+          <div className="checklist-header">
+            <h3>🔍 品質検査チェックリスト</h3>
+            <div className="role-badge">
+              {userRole === ROLES.VILLAGER ? '👨‍🔬 正規検査官' : '🕵️ 潜入工作員'}
+            </div>
+          </div>
           <div className="checklist">
             {userChecklist.map((item, index) => (
               <div key={index} className="checklist-item">
@@ -216,50 +235,100 @@ const Game = ({ user, roomId, onGameEnd }) => {
               </div>
             ))}
           </div>
+          <div className="checklist-warning">
+            ⚠️ チェックリストを慎重に確認し、他の検査官と議論してください
+          </div>
         </div>
 
         <div className="voting-section">
-          <h3>判定</h3>
+          <div className="voting-header">
+            <h3>⚖️ 最終判定</h3>
+            {gameData.phase === GAME_PHASES.VOTING && (
+              <div className="countdown-timer">
+                ⏰ 残り {timeLeft} 秒
+              </div>
+            )}
+          </div>
+          
           {gameData.phase === GAME_PHASES.PLAYING && isHost && (
-            <button onClick={startVoting} className="start-voting-btn">
-              投票開始
-            </button>
+            <div className="host-controls">
+              <button onClick={startVoting} className="start-voting-btn">
+                🗳️ 投票フェーズ開始
+              </button>
+              <p className="host-instruction">
+                全員が検査とディスカッションを完了したら投票を開始してください
+              </p>
+            </div>
           )}
           
           {gameData.phase === GAME_PHASES.VOTING && (
-            <div className="voting-buttons">
-              <button
-                onClick={() => castVote(VOTE_OPTIONS.APPROVE)}
-                disabled={!!userVote}
-                className={`vote-btn approve ${userVote === VOTE_OPTIONS.APPROVE ? 'selected' : ''}`}
-              >
-                ヨシ！（採用）
-              </button>
-              <button
-                onClick={() => castVote(VOTE_OPTIONS.REJECT)}
-                disabled={!!userVote}
-                className={`vote-btn reject ${userVote === VOTE_OPTIONS.REJECT ? 'selected' : ''}`}
-              >
-                ダメ（不採用）
-              </button>
+            <div className="voting-area">
+              <div className="voting-instruction">
+                この商品を市場に出荷しますか？
+              </div>
+              <div className="voting-buttons">
+                <button
+                  onClick={() => castVote(VOTE_OPTIONS.APPROVE)}
+                  disabled={!!userVote}
+                  className={`vote-btn approve ${userVote === VOTE_OPTIONS.APPROVE ? 'selected' : ''}`}
+                >
+                  ✅ ヨシ！
+                  <span className="vote-detail">（出荷承認）</span>
+                </button>
+                <button
+                  onClick={() => castVote(VOTE_OPTIONS.REJECT)}
+                  disabled={!!userVote}
+                  className={`vote-btn reject ${userVote === VOTE_OPTIONS.REJECT ? 'selected' : ''}`}
+                >
+                  ❌ ダメ
+                  <span className="vote-detail">（出荷停止）</span>
+                </button>
+              </div>
+              {userVote && (
+                <div className="vote-confirmation">
+                  ✅ 投票完了: {userVote === VOTE_OPTIONS.APPROVE ? 'ヨシ！' : 'ダメ'}
+                </div>
+              )}
             </div>
           )}
 
           {gameData.phase === GAME_PHASES.VOTING && (
             <div className="vote-status">
-              投票済み: {Object.keys(gameData.votes).length}/{gameData.players.length}
-              {allPlayersVoted && <div>結果集計中...</div>}
+              📊 投票状況: {Object.keys(gameData.votes).length}/{gameData.players.length} 名が投票済み
+              {allPlayersVoted && (
+                <div className="processing-votes">
+                  🔄 結果を集計中...
+                </div>
+              )}
             </div>
           )}
         </div>
 
         <div className="chat-section">
-          <h3>チャット</h3>
+          <div className="chat-header">
+            <h3>💬 検査チーム会議室</h3>
+            <div className="chat-status">
+              {gameData.phase === GAME_PHASES.PLAYING ? '🔍 検査・議論中' : 
+               gameData.phase === GAME_PHASES.VOTING ? '🗳️ 投票中' : '⏸️ 待機中'}
+            </div>
+          </div>
           <div className="messages">
+            {messages.length === 0 && (
+              <div className="no-messages">
+                まだメッセージがありません。チーム内で商品について議論を始めましょう。
+              </div>
+            )}
             {messages.map(message => (
               <div key={message.id} className="message">
-                <span className="sender">{message.senderName}: </span>
-                <span className="text">{message.text}</span>
+                <div className="message-header">
+                  <span className="sender">{message.senderName}</span>
+                  <span className="timestamp">
+                    {message.timestamp?.toDate ? 
+                      message.timestamp.toDate().toLocaleTimeString() : 
+                      '送信中...'}
+                  </span>
+                </div>
+                <div className="message-text">{message.text}</div>
               </div>
             ))}
           </div>
@@ -269,9 +338,15 @@ const Game = ({ user, roomId, onGameEnd }) => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="メッセージを入力..."
+              placeholder="品質について議論しましょう..."
+              maxLength={200}
             />
-            <button onClick={sendMessage}>送信</button>
+            <button onClick={sendMessage} disabled={!newMessage.trim()}>
+              📤 送信
+            </button>
+          </div>
+          <div className="chat-tips">
+            💡 ヒント: チェックリストの違いに注目して議論しましょう
           </div>
         </div>
       </div>
